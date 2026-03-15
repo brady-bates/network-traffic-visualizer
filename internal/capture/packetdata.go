@@ -25,7 +25,7 @@ func NewPacketData(srcIP, dstIP net.IP) PacketData {
 func NewDataFromPacket(packet gopacket.Packet, subnet *net.IPNet) PacketData {
 	var srcIP, dstIP net.IP
 
-	// TODO improve handling of IPv6 rather "normalizing" to IPv4
+	// TODO improve handling of IPv6 rather than "normalizing" to IPv4
 	switch layer := packet.NetworkLayer().(type) {
 	case *layers.IPv4:
 		srcIP = layer.SrcIP

@@ -9,3 +9,4 @@
 .env
 assets/map/map.geojson
 assets/geolitedb/GeoLite2-City.mmdb
+**.puml
