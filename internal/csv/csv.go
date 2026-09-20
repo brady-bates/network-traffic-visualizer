@@ -3,8 +3,8 @@ package csv
 import (
 	"context"
 	"encoding/csv"
-	"fmt"
 	"errors"
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"log"
@@ -71,7 +71,11 @@ func StreamToCSV(ctx context.Context, packetOut <-chan gopacket.Packet, filename
 			log.Fatal(err)
 		}
 	} else {
-		file, err = os.Create(filename)
+		var createErr error
+		file, createErr = os.Create(filename)
+		if createErr != nil {
+			log.Fatal(createErr)
+		}
 	}
 
 	writer := csv.NewWriter(file)

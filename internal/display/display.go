@@ -27,10 +27,10 @@ type Display struct {
 }
 
 func NewDisplay(
-    s *simulation.Simulation,
-    geoData pkgmap.MapData,
-    geoService geo.GeoService,
-    cancel context.CancelFunc,
+	s *simulation.Simulation,
+	geoData pkgmap.MapData,
+	geoService geo.GeoService,
+	cancel context.CancelFunc,
 ) *Display {
 	circleImage := ebiten.NewImage(6, 6)
 	vector.FillCircle(circleImage, 3, 3, 3, color.White, true)

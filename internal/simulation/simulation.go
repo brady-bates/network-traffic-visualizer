@@ -72,12 +72,7 @@ func (s *Simulation) AddToLocations(l *Location) {
 }
 
 func (s *Simulation) WatchEventChannel() {
-	var data capture.PacketData
-	for {
-		select {
-		case data = <-s.CaptureData:
-		}
-
+	for data := range s.CaptureData {
 		locs := []Location{
 			NewLocation(data.SrcIP, s.GeoService, s.MapBounds),
 			NewLocation(data.DstIP, s.GeoService, s.MapBounds),
@@ -115,19 +110,16 @@ func (s *Simulation) CreateLocationsFromBuffer(aggressionCurve float64, maxWatch
 	maxDelay := float64(maxWatcherDelay)
 
 	var location Location
-	for {
-		select {
-		case location = <-s.locationBuffer:
-			count := float64(len(s.locationBuffer))
-			fullness := count / (capacity * .6)
-			modulationFactor := math.Pow(fullness, curve)
-			modulatedDelay := maxDelay + modulationFactor*(minDelay-maxDelay)
-			micro := time.Duration(modulatedDelay) * time.Microsecond
+	for location = range s.locationBuffer {
+		count := float64(len(s.locationBuffer))
+		fullness := count / (capacity * .6)
+		modulationFactor := math.Pow(fullness, curve)
+		modulatedDelay := maxDelay + modulationFactor*(minDelay-maxDelay)
+		micro := time.Duration(modulatedDelay) * time.Microsecond
 
-			s.AddToLocations(&location)
+		s.AddToLocations(&location)
 
-			time.Sleep(micro)
-		}
+		time.Sleep(micro)
 	}
 }
 
