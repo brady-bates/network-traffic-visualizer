@@ -1,13 +1,13 @@
 package csv
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"errors"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"log"
-	"networktrafficart/internal/lifecycle"
 	"os"
 	"reflect"
 )
@@ -60,7 +60,7 @@ func fileExists(name string) (bool, error) {
 	return false, err
 }
 
-func StreamToCSV(shutDown *lifecycle.ShutdownContext, packetOut <-chan gopacket.Packet, filename string) {
+func StreamToCSV(ctx context.Context, packetOut <-chan gopacket.Packet, filename string) {
 	var file *os.File
 	var err error
 
@@ -90,7 +90,7 @@ func StreamToCSV(shutDown *lifecycle.ShutdownContext, packetOut <-chan gopacket.
 				log.Fatal("Failed to append to file: ", err)
 			}
 			writer.Flush()
-		case <-shutDown.Context.Done():
+		case <-ctx.Done():
 			fmt.Println("Shutdown signal received")
 			writer.Flush()
 			if err = file.Sync(); err != nil {

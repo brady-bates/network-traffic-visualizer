@@ -1,11 +1,11 @@
 package display
 
 import (
+	"context"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
 	"networktrafficart/internal/geo"
-	"networktrafficart/internal/lifecycle"
 	_map "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
 )
@@ -23,9 +23,10 @@ type Display struct {
 	geoJsonData     _map.MapData
 	geoService      geo.GeoService
 	mapProjection   *ebiten.Image
+	cancel          context.CancelFunc
 }
 
-func NewDisplay(s *simulation.Simulation, geoData _map.MapData, geoService geo.GeoService) *Display {
+func NewDisplay(s *simulation.Simulation, geoData _map.MapData, geoService geo.GeoService, cancel context.CancelFunc) *Display {
 	circleImage := ebiten.NewImage(6, 6)
 	vector.FillCircle(circleImage, 3, 3, 3, color.White, true)
 
@@ -38,6 +39,7 @@ func NewDisplay(s *simulation.Simulation, geoData _map.MapData, geoService geo.G
 		geoJsonData:     geoData,
 		geoService:      geoService,
 		mapProjection:   nil,
+		cancel:          cancel,
 	}
 }
 
@@ -46,7 +48,9 @@ func (d *Display) Update() error {
 
 	if ebiten.IsWindowBeingClosed() {
 		ebiten.SetWindowClosingHandled(true)
-		lifecycle.GetShutDownCtx().Cancel()
+		if d.cancel != nil {
+			d.cancel()
+		}
 
 		return ebiten.Termination
 	}

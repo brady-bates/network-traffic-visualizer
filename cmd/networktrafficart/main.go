@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -11,7 +12,6 @@ import (
 	"networktrafficart/internal/csv"
 	"networktrafficart/internal/display"
 	"networktrafficart/internal/geo"
-	"networktrafficart/internal/lifecycle"
 	_map "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
 	"runtime"
@@ -22,6 +22,9 @@ const (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	if err := config.LoadConfig(); err != nil {
 		log.Fatal(err)
 	}
@@ -51,7 +54,7 @@ func main() {
 	var csvWriterIn chan gopacket.Packet
 	if conf.WritePacketsToCSV {
 		csvWriterIn = make(chan gopacket.Packet)
-		go csv.StreamToCSV(lifecycle.GetShutDownCtx(), csvWriterIn, conf.CsvName)
+		go csv.StreamToCSV(ctx, csvWriterIn, conf.CsvName)
 	}
 
 	go capt.StartPacketCapture(csvWriterIn)
@@ -63,7 +66,7 @@ func main() {
 	geoData := _map.LoadGeoJSON("assets/map/map.geojson")
 	geoService := geo.NewGeoService("assets/geolitedb/GeoLite2-City.mmdb")
 	sim := simulation.NewSimulation(capt.Data, geoData.Bounds, geoService)
-	disp := display.NewDisplay(sim, geoData, geoService)
+	disp := display.NewDisplay(sim, geoData, geoService, cancel)
 
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle(title)
