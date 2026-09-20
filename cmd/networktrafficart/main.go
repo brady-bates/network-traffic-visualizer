@@ -3,10 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/pcap"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
-	"net"
 	"networktrafficart/internal/capture"
 	"networktrafficart/internal/capture/mockdatastream"
 	"networktrafficart/internal/config"
@@ -16,11 +14,11 @@ import (
 	_map "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
 	"networktrafficart/internal/util"
+	"runtime"
 )
 
 const (
-	title             = "Network Traffic Art"
-	captureDeviceName = "en0" // TODO add logic to get the best device to capture with
+	title = "Network Traffic Art"
 )
 
 func main() {
@@ -29,24 +27,22 @@ func main() {
 	}
 	conf := config.GetConfig()
 
-	subnet, err := capture.GetInterfaceIPv4SubnetRange(captureDeviceName)
+	device, err := capture.FindDevice(conf.CaptureInterface)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	handle, err := pcap.OpenLive(captureDeviceName, 65536, true, pcap.BlockForever)
+	handle, err := capture.OpenDevice(device)
 	if err != nil {
 		log.Fatal(err)
 	}
-	capt := capture.NewCaptureProvider(handle, subnet)
+	defer handle.Close()
+
+	log.Printf("Capturing on %s with IPv4 subnet %s", device.DisplayName(), device.Subnet)
+	capt := capture.NewCaptureProvider(handle, device.Subnet)
 
 	if conf.EnablePacketCaptureFilter {
-		var ipv4 net.IP
-		if ipv4, err = capture.GetInterfaceIPv4(captureDeviceName); err != nil {
-			log.Fatal(err)
-		}
-
-		filter := fmt.Sprintf("%s %s", conf.PacketCaptureFilter, ipv4.String())
+		filter := fmt.Sprintf("%s %s", conf.PacketCaptureFilter, device.IPv4.String())
 		if err = capt.SetHandleBPFFilter(filter); err != nil {
 			log.Println("Failed to set packet filter ", err)
 		}
@@ -78,9 +74,11 @@ func main() {
 		conf.PacketBufferConsumerMaxDelayMicros,
 		conf.PacketBufferConsumerAggressionCurve,
 	)
-	if err = ebiten.RunGameWithOptions(disp, &ebiten.RunGameOptions{
-		GraphicsLibrary: ebiten.GraphicsLibraryOpenGL,
-	}); err != nil {
+	runOptions := &ebiten.RunGameOptions{}
+	if runtime.GOOS == "darwin" {
+		runOptions.GraphicsLibrary = ebiten.GraphicsLibraryOpenGL
+	}
+	if err = ebiten.RunGameWithOptions(disp, runOptions); err != nil {
 		log.Fatal(err)
 	}
 }

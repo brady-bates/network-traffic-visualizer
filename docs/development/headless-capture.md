@@ -13,7 +13,7 @@ List available interfaces:
 go run ./cmd/capture --list-interfaces
 ```
 
-Capture from the first non-loopback interface with an IPv4 address:
+Capture from the interface carrying the default IPv4 route:
 
 ```sh
 go run ./cmd/capture
@@ -34,7 +34,7 @@ Machine-readable NDJSON is written to standard output. Diagnostics are written
 to standard error, so output can be redirected or piped safely:
 
 ```sh
-go run ./cmd/capture --interface en0 --count 100 > packets.ndjson
+go run ./cmd/capture --count 100 > packets.ndjson
 ```
 
 Each line uses a versioned envelope:

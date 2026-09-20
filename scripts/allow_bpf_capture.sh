@@ -1,2 +1,6 @@
-#!bin/bash
-sudo chmod 666 /dev/bpf*
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$SCRIPT_DIR/setup_macos.sh" --grant-capture

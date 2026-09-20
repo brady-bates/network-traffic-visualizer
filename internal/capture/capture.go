@@ -6,12 +6,20 @@ import (
 	"github.com/google/gopacket/pcap"
 	"log"
 	"net"
+	"strings"
 )
 
 type Capture struct {
 	Handle      *pcap.Handle
 	Data        chan PacketData
 	localSubnet *net.IPNet
+}
+
+type Device struct {
+	Name        string
+	Description string
+	IPv4        net.IP
+	Subnet      *net.IPNet
 }
 
 func NewCaptureProvider(handle *pcap.Handle, subnet *net.IPNet) *Capture {
@@ -55,75 +63,116 @@ func (c *Capture) SetHandleBPFFilter(filter string) error {
 	return c.Handle.SetBPFFilter(filter)
 }
 
-func GetInterfaceIPv4(deviceName string) (net.IP, error) {
+func FindDevice(preferred string) (Device, error) {
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
-		return nil, err
+		return Device{}, err
 	}
 
-	for _, d := range devices {
-		if d.Name != deviceName {
+	return selectDevice(devices, preferred, defaultRouteIPv4())
+}
+
+func selectDevice(devices []pcap.Interface, preferred string, routedIP net.IP) (Device, error) {
+	candidates := make([]Device, 0, len(devices))
+	for _, device := range devices {
+		candidate, ok := deviceIPv4(device)
+		if !ok {
 			continue
 		}
-		for _, address := range d.Addresses {
-			if address.IP.To4() != nil {
-				return address.IP.To4(), nil
+		candidates = append(candidates, candidate)
+	}
+
+	if preferred != "" {
+		for _, candidate := range candidates {
+			if strings.EqualFold(candidate.Name, preferred) ||
+				(candidate.Description != "" && strings.EqualFold(candidate.Description, preferred)) {
+				return candidate, nil
 			}
 		}
-		return nil, fmt.Errorf("device %s found but has no IPv4 address", deviceName)
+
+		return Device{}, fmt.Errorf("capture interface %q not found or has no non-loopback IPv4 address", preferred)
 	}
 
-	return nil, fmt.Errorf("device %s not found", deviceName)
+	if routedIP != nil {
+		for _, candidate := range candidates {
+			if candidate.IPv4.Equal(routedIP) {
+				return candidate, nil
+			}
+		}
+	}
+
+	for _, candidate := range candidates {
+		if candidate.IPv4.IsPrivate() {
+			return candidate, nil
+		}
+	}
+
+	if len(candidates) > 0 {
+		return candidates[0], nil
+	}
+
+	return Device{}, fmt.Errorf("could not find a capture interface with a non-loopback IPv4 address")
 }
 
-func GetInterfaceIPv4SubnetRange(deviceName string) (*net.IPNet, error) {
-	devices, err := pcap.FindAllDevs()
+func defaultRouteIPv4() net.IP {
+	connection, err := net.Dial("udp4", "192.0.2.1:9")
 	if err != nil {
-		return nil, err
+		return nil
 	}
+	defer connection.Close()
 
-	for _, device := range devices {
-		if device.Name != deviceName {
-			continue
-		}
-
-		ipNet := ipv4Subnet(device)
-		if ipNet == nil {
-			return nil, fmt.Errorf("device %s found but has no non-loopback IPv4 address", deviceName)
-		}
-		return ipNet, nil
+	address, ok := connection.LocalAddr().(*net.UDPAddr)
+	if !ok {
+		return nil
 	}
-
-	return nil, fmt.Errorf("device %s not found", deviceName)
+	return address.IP.To4()
 }
 
-func GetDefaultCaptureDevice() (string, *net.IPNet, error) {
-	devices, err := pcap.FindAllDevs()
-	if err != nil {
-		return "", nil, err
-	}
-
-	for _, device := range devices {
-		ipNet := ipv4Subnet(device)
-		if ipNet != nil {
-			return device.Name, ipNet, nil
-		}
-	}
-
-	return "", nil, fmt.Errorf("could not find a capture device with a non-loopback IPv4 address")
-}
-
-func ipv4Subnet(device pcap.Interface) *net.IPNet {
+func deviceIPv4(device pcap.Interface) (Device, bool) {
 	for _, address := range device.Addresses {
-		if address.IP == nil || address.IP.IsLoopback() || address.IP.To4() == nil {
+		ipv4 := address.IP.To4()
+		if ipv4 == nil || ipv4.IsLoopback() {
 			continue
 		}
 
-		return &net.IPNet{
-			IP:   address.IP.Mask(address.Netmask),
-			Mask: address.Netmask,
+		mask := address.Netmask
+		if len(mask) == 0 {
+			mask = net.CIDRMask(32, 32)
 		}
+
+		return Device{
+			Name:        device.Name,
+			Description: device.Description,
+			IPv4:        ipv4,
+			Subnet: &net.IPNet{
+				IP:   ipv4.Mask(mask),
+				Mask: mask,
+			},
+		}, true
 	}
 
-	return nil
+	return Device{}, false
+}
+
+func ListDevices() ([]pcap.Interface, error) {
+	return pcap.FindAllDevs()
+}
+
+func (d Device) DisplayName() string {
+	if d.Description == "" || d.Description == d.Name {
+		return d.Name
+	}
+	return fmt.Sprintf("%s (%s)", d.Description, d.Name)
+}
+
+func OpenDevice(d Device) (*pcap.Handle, error) {
+	if d.Name == "" {
+		return nil, fmt.Errorf("capture interface name is empty")
+	}
+
+	handle, err := pcap.OpenLive(d.Name, 65536, true, pcap.BlockForever)
+	if err != nil {
+		return nil, fmt.Errorf("open capture interface %s: %w", d.DisplayName(), err)
+	}
+	return handle, nil
 }

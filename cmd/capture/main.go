@@ -4,10 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/google/gopacket/pcap"
 	"io"
 	"log"
-	"net"
 	"networktrafficart/internal/capture"
 	"networktrafficart/internal/captureoutput"
 	"os"
@@ -35,7 +33,7 @@ func main() {
 
 func parseOptions() options {
 	var opts options
-	flag.StringVar(&opts.deviceName, "interface", "", "capture interface; defaults to the first non-loopback IPv4 interface")
+	flag.StringVar(&opts.deviceName, "interface", "", "capture interface name or description; defaults to the interface carrying the default IPv4 route")
 	flag.StringVar(&opts.filter, "filter", "", "optional complete BPF capture filter")
 	flag.IntVar(&opts.count, "count", 0, "stop after this many events; zero streams until interrupted")
 	flag.BoolVar(&opts.list, "list-interfaces", false, "list available capture interfaces and exit")
@@ -51,51 +49,43 @@ func run(ctx context.Context, output, diagnostics io.Writer, opts options) error
 		return listInterfaces(output)
 	}
 
-	deviceName, subnet, err := captureDevice(opts.deviceName)
+	device, err := capture.FindDevice(opts.deviceName)
 	if err != nil {
 		return err
 	}
 
-	handle, err := pcap.OpenLive(deviceName, 65536, true, pcap.BlockForever)
+	handle, err := capture.OpenDevice(device)
 	if err != nil {
-		return fmt.Errorf("open capture interface %s: %w", deviceName, err)
+		return err
 	}
 	defer handle.Close()
 
-	provider := capture.NewCaptureProvider(handle, subnet)
+	provider := capture.NewCaptureProvider(handle, device.Subnet)
 	if opts.filter != "" {
 		if err := provider.SetHandleBPFFilter(opts.filter); err != nil {
 			return fmt.Errorf("set BPF filter: %w", err)
 		}
 	}
 
-	fmt.Fprintf(diagnostics, "capturing on %s (%s); streaming packet metadata as NDJSON\n", deviceName, subnet)
+	fmt.Fprintf(diagnostics, "capturing on %s with IPv4 subnet %s; streaming packet metadata as NDJSON\n", device.DisplayName(), device.Subnet)
 	go provider.StartPacketCapture(nil)
 	return captureoutput.StreamNDJSON(ctx, output, provider.Data, opts.count)
 }
 
-func captureDevice(deviceName string) (string, *net.IPNet, error) {
-	if deviceName == "" {
-		return capture.GetDefaultCaptureDevice()
-	}
-
-	subnet, err := capture.GetInterfaceIPv4SubnetRange(deviceName)
-	if err != nil {
-		return "", nil, err
-	}
-	return deviceName, subnet, nil
-}
-
 func listInterfaces(output io.Writer) error {
-	devices, err := pcap.FindAllDevs()
+	devices, err := capture.ListDevices()
 	if err != nil {
 		return err
 	}
 
 	for _, device := range devices {
-		fmt.Fprintln(output, device.Name)
+		if device.Description == "" || device.Description == device.Name {
+			fmt.Fprintln(output, device.Name)
+		} else {
+			fmt.Fprintf(output, "%s\n  name: %s\n", device.Description, device.Name)
+		}
 		for _, address := range device.Addresses {
-			fmt.Fprintf(output, "  %s\n", address.IP)
+			fmt.Fprintf(output, "  address: %s\n", address.IP)
 		}
 	}
 	return nil

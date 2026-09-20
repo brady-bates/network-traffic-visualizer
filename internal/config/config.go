@@ -19,6 +19,7 @@ type Config struct {
 	PacketBufferConsumerMaxDelayMicros  int
 	WritePacketsToCSV                   bool
 	CsvName                             string
+	CaptureInterface                    string
 	EnablePacketCaptureFilter           bool
 	PacketCaptureFilter                 string
 	PacketBufferConsumerAggressionCurve float64
@@ -35,6 +36,7 @@ func LoadConfig() error {
 		PacketBufferConsumerMaxDelayMicros:  util.ParseToInt(os.Getenv("PACKET_BUFFER_CONSUMER_MAX_DELAY_MICROS")),
 		WritePacketsToCSV:                   util.IsTrueStr(os.Getenv("WRITE_PACKETS_TO_CSV")),
 		CsvName:                             os.Getenv("CSV_NAME"),
+		CaptureInterface:                    strings.TrimSpace(os.Getenv("CAPTURE_INTERFACE")),
 		EnablePacketCaptureFilter:           util.IsTrueStr(os.Getenv("ENABLE_PACKET_CAPTURE_FILTER")),
 		PacketCaptureFilter:                 strings.TrimSpace(os.Getenv("PACKET_CAPTURE_FILTER")),
 		PacketBufferConsumerAggressionCurve: util.ParseToFloat(os.Getenv("PACKET_BUFFER_CONSUMER_AGGRESSION_CURVE")),

@@ -4,6 +4,7 @@
 
 # Project
 /duckdb/
+/bin/
 **.db
 **.csv
 .env
