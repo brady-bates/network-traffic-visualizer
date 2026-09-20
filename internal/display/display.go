@@ -5,9 +5,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
 	"networktrafficart/internal/geo"
+	"networktrafficart/internal/lifecycle"
 	_map "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
-	"networktrafficart/internal/util"
 )
 
 const (
@@ -46,7 +46,7 @@ func (d *Display) Update() error {
 
 	if ebiten.IsWindowBeingClosed() {
 		ebiten.SetWindowClosingHandled(true)
-		util.GetShutDownCtx().Cancel()
+		lifecycle.GetShutDownCtx().Cancel()
 
 		return ebiten.Termination
 	}

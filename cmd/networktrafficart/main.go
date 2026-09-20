@@ -11,9 +11,9 @@ import (
 	"networktrafficart/internal/csv"
 	"networktrafficart/internal/display"
 	"networktrafficart/internal/geo"
+	"networktrafficart/internal/lifecycle"
 	_map "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
-	"networktrafficart/internal/util"
 	"runtime"
 )
 
@@ -51,7 +51,7 @@ func main() {
 	var csvWriterIn chan gopacket.Packet
 	if conf.WritePacketsToCSV {
 		csvWriterIn = make(chan gopacket.Packet)
-		go csv.StreamToCSV(util.GetShutDownCtx(), csvWriterIn, conf.CsvName)
+		go csv.StreamToCSV(lifecycle.GetShutDownCtx(), csvWriterIn, conf.CsvName)
 	}
 
 	go capt.StartPacketCapture(csvWriterIn)

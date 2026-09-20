@@ -3,10 +3,11 @@ package csv
 import (
 	"encoding/csv"
 	"fmt"
+	"errors"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"log"
-	"networktrafficart/internal/util"
+	"networktrafficart/internal/lifecycle"
 	"os"
 	"reflect"
 )
@@ -48,13 +49,24 @@ func appendPacketToCSV(writer *csv.Writer, packet gopacket.Packet) error {
 	return writer.Write(newPacketRecord(packet).toStringArray())
 }
 
-func StreamToCSV(shutDown *util.ShutdownContext, packetOut <-chan gopacket.Packet, filename string) {
+func fileExists(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	return false, err
+}
+
+func StreamToCSV(shutDown *lifecycle.ShutdownContext, packetOut <-chan gopacket.Packet, filename string) {
 	var file *os.File
 	var err error
 
-	fileExists, _ := util.FileExists(filename)
+	exists, _ := fileExists(filename)
 
-	if fileExists {
+	if exists {
 		if file, err = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0644); err != nil {
 			log.Fatal(err)
 		}
@@ -64,7 +76,7 @@ func StreamToCSV(shutDown *util.ShutdownContext, packetOut <-chan gopacket.Packe
 
 	writer := csv.NewWriter(file)
 
-	if !fileExists {
+	if !exists {
 		if err = writeCSVHeader(writer); err != nil {
 			log.Fatal(err)
 		}

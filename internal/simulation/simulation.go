@@ -6,7 +6,6 @@ import (
 	"math"
 	"networktrafficart/internal/capture"
 	"networktrafficart/internal/geo"
-	"networktrafficart/internal/util"
 	"slices"
 	"sync"
 	"time"
@@ -105,8 +104,12 @@ func (s *Simulation) containsLocation(target Location) bool {
 	})
 }
 
+func clampValue(val, min, max float64) float64 {
+	return math.Max(min, math.Min(val, max))
+}
+
 func (s *Simulation) CreateLocationsFromBuffer(aggressionCurve float64, maxWatcherDelay int) {
-	curve := util.ClampValue(aggressionCurve, 0.0, math.Inf(+1))
+	curve := clampValue(aggressionCurve, 0.0, math.Inf(+1))
 	capacity := float64(cap(s.locationBuffer))
 	minDelay := 0.0
 	maxDelay := float64(maxWatcherDelay)
