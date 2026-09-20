@@ -8,30 +8,28 @@ import (
 	"net"
 )
 
-type Event struct {
-	Size      int
-	SrcIP     net.IP
-	DstIP     net.IP
-	IsInbound bool
+type PacketData struct {
+	SrcIP      net.IP
+	DstIP      net.IP
+	IsIncoming bool
 }
 
-func NewEvent(size int, srcIP, dstIP net.IP) Event {
-	return Event{
-		Size:      size,
-		SrcIP:     srcIP,
-		DstIP:     dstIP,
-		IsInbound: rand.Intn(2) == 1,
+func NewPacketData(srcIP, dstIP net.IP) PacketData {
+	return PacketData{
+		SrcIP:      srcIP,
+		DstIP:      dstIP,
+		IsIncoming: rand.Intn(2) == 1,
 	}
 }
 
-func NewEventFromPacket(packet gopacket.Packet, subnet *net.IPNet) Event {
+func NewDataFromPacket(packet gopacket.Packet, subnet *net.IPNet) PacketData {
 	var srcIP, dstIP net.IP
 
-	// TODO convert or not based on the actual given ip type
+	// TODO improve handling of IPv6 rather than "normalizing" to IPv4
 	switch layer := packet.NetworkLayer().(type) {
 	case *layers.IPv4:
-		srcIP = normalizeIP(layer.SrcIP)
-		dstIP = normalizeIP(layer.DstIP)
+		srcIP = layer.SrcIP
+		dstIP = layer.DstIP
 	case *layers.IPv6:
 		srcIP = normalizeIP(layer.SrcIP)
 		dstIP = normalizeIP(layer.DstIP)
@@ -39,18 +37,20 @@ func NewEventFromPacket(packet gopacket.Packet, subnet *net.IPNet) Event {
 		fmt.Printf("Unknown layer type %s - check if layer type is valid before calling\n", packet.NetworkLayer().LayerType().String())
 	}
 
-	return Event{
-		packet.Metadata().Length,
+	return PacketData{
 		srcIP,
 		dstIP,
 		subnet.Contains(dstIP),
 	}
 }
 
-func IsValidLayerType(layer gopacket.LayerType) bool {
-	switch layer {
-	case layers.LayerTypeIPv4,
-		layers.LayerTypeIPv6:
+func IsValidLayerType(layer gopacket.Layer) bool {
+	if layer == nil {
+		return false
+	}
+
+	switch layer.(type) {
+	case *layers.IPv4, *layers.IPv6:
 		return true
 	default:
 		return false

@@ -3,16 +3,19 @@ package main
 import (
 	"fmt"
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcap"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
 	"net"
-	"networktrafficart/capture"
-	"networktrafficart/capture/mockeventstream"
-	"networktrafficart/config"
-	"networktrafficart/csv"
-	"networktrafficart/display"
-	"networktrafficart/simulation"
-	"networktrafficart/util"
+	"networktrafficart/internal/capture"
+	"networktrafficart/internal/capture/mockdatastream"
+	"networktrafficart/internal/config"
+	"networktrafficart/internal/csv"
+	"networktrafficart/internal/display"
+	"networktrafficart/internal/geo"
+	_map "networktrafficart/internal/map"
+	"networktrafficart/internal/simulation"
+	"networktrafficart/internal/util"
 )
 
 const (
@@ -26,15 +29,16 @@ func main() {
 	}
 	conf := config.GetConfig()
 
-	subnet, err := capture.GetIPv4SubnetRange()
+	subnet, err := capture.GetInterfaceIPv4SubnetRange(captureDeviceName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	capt, err := capture.NewCaptureProvider(captureDeviceName, subnet)
+	handle, err := pcap.OpenLive(captureDeviceName, 65536, true, pcap.BlockForever)
 	if err != nil {
 		log.Fatal(err)
 	}
+	capt := capture.NewCaptureProvider(handle, subnet)
 
 	if conf.EnablePacketCaptureFilter {
 		var ipv4 net.IP
@@ -57,23 +61,26 @@ func main() {
 	go capt.StartPacketCapture(csvWriterIn)
 
 	if conf.EnableMockEventStream {
-		go mockeventstream.Init(capt, conf.MockEventStreamDelayMicros, conf.MockEventBatchSize)
+		go mockdatastream.Start(capt.Data, conf.MockEventStreamDelayMicros, conf.MockEventBatchSize)
 	}
 
-	sim := simulation.NewSimulation(capt.Events)
-	disp := display.NewDisplay(sim)
+	geoData := _map.LoadGeoJSON("assets/map/map.geojson")
+	geoService := geo.NewGeoService("assets/geolitedb/GeoLite2-City.mmdb")
+	sim := simulation.NewSimulation(capt.Data, geoData.Bounds, geoService)
+	disp := display.NewDisplay(sim, geoData, geoService)
 
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle(title)
+	ebiten.SetWindowSize(disp.ScreenWidth, disp.ScreenHeight)
 	ebiten.SetFullscreen(conf.Fullscreen)
 
 	sim.Init(
-		disp.ScreenWidth,
-		disp.ScreenHeight,
-		conf.ParticleBufferConsumerMaxDelayMicros,
-		conf.ParticleBufferConsumerAggressionCurve,
+		conf.PacketBufferConsumerMaxDelayMicros,
+		conf.PacketBufferConsumerAggressionCurve,
 	)
-	if err = ebiten.RunGame(disp); err != nil {
+	if err = ebiten.RunGameWithOptions(disp, &ebiten.RunGameOptions{
+		GraphicsLibrary: ebiten.GraphicsLibraryOpenGL,
+	}); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -1,8 +1,12 @@
+# IDE/Environemt
 /.idea/
 *.iml
 
-
+# Project
 /duckdb/
 **.db
 **.csv
 .env
+assets/map/map.geojson
+assets/geolitedb/GeoLite2-City.mmdb
+**.puml

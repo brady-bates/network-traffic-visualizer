@@ -6,12 +6,12 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"log"
-	"networktrafficart/util"
+	"networktrafficart/internal/util"
 	"os"
 	"reflect"
 )
 
-type PacketRecord struct {
+type packetRecord struct {
 	Timestamp int64
 	Length    int32
 
@@ -40,8 +40,12 @@ type PacketRecord struct {
 	DNSResponseCode int32
 }
 
-func AppendPacketToCSV(writer *csv.Writer, packet gopacket.Packet) error {
-	return writer.Write(NewPacketRecord(packet).ToStringArray())
+func writeCSVHeader(writer *csv.Writer) error {
+	return writer.Write(reflectPacketRecord())
+}
+
+func appendPacketToCSV(writer *csv.Writer, packet gopacket.Packet) error {
+	return writer.Write(newPacketRecord(packet).toStringArray())
 }
 
 func StreamToCSV(shutDown *util.ShutdownContext, packetOut <-chan gopacket.Packet, filename string) {
@@ -61,7 +65,7 @@ func StreamToCSV(shutDown *util.ShutdownContext, packetOut <-chan gopacket.Packe
 	writer := csv.NewWriter(file)
 
 	if !fileExists {
-		if err = writer.Write(ReflectPacketRecord()); err != nil {
+		if err = writeCSVHeader(writer); err != nil {
 			log.Fatal(err)
 		}
 		writer.Flush()
@@ -70,9 +74,10 @@ func StreamToCSV(shutDown *util.ShutdownContext, packetOut <-chan gopacket.Packe
 	for {
 		select {
 		case packet := <-packetOut:
-			if err = AppendPacketToCSV(writer, packet); err != nil {
+			if err = appendPacketToCSV(writer, packet); err != nil {
 				log.Fatal("Failed to append to file: ", err)
 			}
+			writer.Flush()
 		case <-shutDown.Context.Done():
 			fmt.Println("Shutdown signal received")
 			writer.Flush()
@@ -87,8 +92,8 @@ func StreamToCSV(shutDown *util.ShutdownContext, packetOut <-chan gopacket.Packe
 	}
 }
 
-func NewPacketRecord(packet gopacket.Packet) PacketRecord {
-	r := PacketRecord{
+func newPacketRecord(packet gopacket.Packet) packetRecord {
+	r := packetRecord{
 		Timestamp: packet.Metadata().Timestamp.Unix(),
 		Length:    int32(packet.Metadata().Length),
 	}
@@ -148,7 +153,7 @@ func NewPacketRecord(packet gopacket.Packet) PacketRecord {
 	return r
 }
 
-func (r PacketRecord) ToStringArray() []string {
+func (r packetRecord) toStringArray() []string {
 	return []string{
 		fmt.Sprintf("%d", r.Timestamp),
 		fmt.Sprintf("%d", r.Length),
@@ -174,8 +179,8 @@ func (r PacketRecord) ToStringArray() []string {
 	}
 }
 
-func ReflectPacketRecord() []string {
-	t := reflect.TypeOf(PacketRecord{})
+func reflectPacketRecord() []string {
+	t := reflect.TypeOf(packetRecord{})
 	var headers []string
 	for i := 0; i < t.NumField(); i++ {
 		headers = append(headers, t.Field(i).Name)

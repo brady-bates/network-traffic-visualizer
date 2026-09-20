@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"image/color"
 	"log"
 	"math"
 	"math/rand"
@@ -53,4 +54,20 @@ func FileExists(name string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+func IPToRGBA(src net.IP) color.RGBA {
+	r := src[1]
+	g := src[2]
+	b := src[3]
+
+	brightness := (uint32(r)*299 + uint32(g)*587 + uint32(b)*114) / 1000
+
+	if brightness < 120 {
+		r += 100
+		g += 100
+		b += 100
+	}
+
+	return color.RGBA{R: r, G: g, B: b, A: 255}
 }
