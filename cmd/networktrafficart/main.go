@@ -29,7 +29,7 @@ func main() {
 	}
 	conf := config.GetConfig()
 
-	subnet, err := capture.GetIPv4SubnetRange()
+	subnet, err := capture.GetInterfaceIPv4SubnetRange(captureDeviceName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,7 +78,9 @@ func main() {
 		conf.PacketBufferConsumerMaxDelayMicros,
 		conf.PacketBufferConsumerAggressionCurve,
 	)
-	if err = ebiten.RunGame(disp); err != nil {
+	if err = ebiten.RunGameWithOptions(disp, &ebiten.RunGameOptions{
+		GraphicsLibrary: ebiten.GraphicsLibraryOpenGL,
+	}); err != nil {
 		log.Fatal(err)
 	}
 }

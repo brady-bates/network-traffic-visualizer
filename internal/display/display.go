@@ -26,8 +26,8 @@ type Display struct {
 }
 
 func NewDisplay(s *simulation.Simulation, geoData _map.MapData, geoService geo.GeoService) *Display {
-	circleImage := ebiten.NewImage(100, 100)
-	vector.FillCircle(circleImage, 50, 50, 50, color.White, true)
+	circleImage := ebiten.NewImage(6, 6)
+	vector.FillCircle(circleImage, 3, 3, 3, color.White, true)
 
 	return &Display{
 		simulation:      s,
@@ -60,13 +60,10 @@ func (d *Display) Draw(screen *ebiten.Image) {
 		d.mapProjection = _map.DrawMap(d.geoJsonData, ebiten.NewImage(d.ScreenWidth, d.ScreenHeight))
 	}
 
-	circleImg := ebiten.NewImage(100, 100)
-	vector.FillCircle(circleImg, 3, 3, 3, color.White, true)
-
 	d.screenBuffer.Fill(_map.OceanColor)
 	d.screenBuffer.DrawImage(d.mapProjection, nil)
 
-	d.simulation.DrawLocations(d.screenBuffer, circleImg)
+	d.simulation.DrawLocations(d.screenBuffer, d.baseCircleImage)
 
 	screen.DrawImage(d.screenBuffer, nil)
 }

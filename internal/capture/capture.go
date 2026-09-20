@@ -76,25 +76,54 @@ func GetInterfaceIPv4(deviceName string) (net.IP, error) {
 	return nil, fmt.Errorf("device %s not found", deviceName)
 }
 
-func GetIPv4SubnetRange() (*net.IPNet, error) {
+func GetInterfaceIPv4SubnetRange(deviceName string) (*net.IPNet, error) {
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, device := range devices {
-		for _, address := range device.Addresses {
-			if address.IP == nil || address.IP.IsLoopback() || address.IP.To4() == nil {
-				continue
-			}
+		if device.Name != deviceName {
+			continue
+		}
 
-			ipNet := &net.IPNet{
-				IP:   address.IP.Mask(address.Netmask),
-				Mask: address.Netmask,
-			}
-			return ipNet, nil
+		ipNet := ipv4Subnet(device)
+		if ipNet == nil {
+			return nil, fmt.Errorf("device %s found but has no non-loopback IPv4 address", deviceName)
+		}
+		return ipNet, nil
+	}
+
+	return nil, fmt.Errorf("device %s not found", deviceName)
+}
+
+func GetDefaultCaptureDevice() (string, *net.IPNet, error) {
+	devices, err := pcap.FindAllDevs()
+	if err != nil {
+		return "", nil, err
+	}
+
+	for _, device := range devices {
+		ipNet := ipv4Subnet(device)
+		if ipNet != nil {
+			return device.Name, ipNet, nil
 		}
 	}
 
-	return nil, fmt.Errorf("could not find any IPv4 addresses")
+	return "", nil, fmt.Errorf("could not find a capture device with a non-loopback IPv4 address")
+}
+
+func ipv4Subnet(device pcap.Interface) *net.IPNet {
+	for _, address := range device.Addresses {
+		if address.IP == nil || address.IP.IsLoopback() || address.IP.To4() == nil {
+			continue
+		}
+
+		return &net.IPNet{
+			IP:   address.IP.Mask(address.Netmask),
+			Mask: address.Netmask,
+		}
+	}
+
+	return nil
 }

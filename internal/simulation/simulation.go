@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/paulmach/orb"
 	"math"
@@ -50,7 +49,6 @@ func (s *Simulation) Tick() {
 }
 
 func (s *Simulation) tickLocations() {
-	fmt.Println(len(s.Locations))
 	s.Locations = slices.DeleteFunc(s.Locations, func(loc *Location) bool {
 		loc.Lifespan -= 1
 		return loc.Lifespan <= 0
@@ -93,13 +91,15 @@ func (s *Simulation) WatchEventChannel() {
 			select {
 			case s.locationBuffer <- loc:
 			default:
-				fmt.Println("Location buffer is full")
 			}
 		}
 	}
 }
 
 func (s *Simulation) containsLocation(target Location) bool {
+	s.mut.RLock()
+	defer s.mut.RUnlock()
+
 	return slices.ContainsFunc(s.Locations, func(l *Location) bool {
 		return l.X == target.X && l.Y == target.Y
 	})
