@@ -1,4 +1,4 @@
-package _map
+package pkgmap
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

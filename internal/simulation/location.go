@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 	"networktrafficart/internal/geo"
-	_map "networktrafficart/internal/map"
+	pkgmap "networktrafficart/internal/map"
 )
 
 type Location struct {
@@ -25,6 +25,6 @@ func getCoordsFromIP(ip net.IP, geo geo.GeoService, bounds orb.Bound) (float64, 
 	if err != nil {
 		log.Fatal(err)
 	}
-	x, y := _map.Project(bounds, long, lat)
+	x, y := pkgmap.Project(bounds, long, lat)
 	return x, y
 }

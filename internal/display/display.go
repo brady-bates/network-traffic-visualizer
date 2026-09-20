@@ -6,7 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
 	"networktrafficart/internal/geo"
-	_map "networktrafficart/internal/map"
+	pkgmap "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
 )
 
@@ -20,13 +20,18 @@ type Display struct {
 	ScreenHeight    int
 	baseCircleImage *ebiten.Image
 	screenBuffer    *ebiten.Image
-	geoJsonData     _map.MapData
+	geoJsonData     pkgmap.MapData
 	geoService      geo.GeoService
 	mapProjection   *ebiten.Image
 	cancel          context.CancelFunc
 }
 
-func NewDisplay(s *simulation.Simulation, geoData _map.MapData, geoService geo.GeoService, cancel context.CancelFunc) *Display {
+func NewDisplay(
+    s *simulation.Simulation,
+    geoData pkgmap.MapData,
+    geoService geo.GeoService,
+    cancel context.CancelFunc,
+) *Display {
 	circleImage := ebiten.NewImage(6, 6)
 	vector.FillCircle(circleImage, 3, 3, 3, color.White, true)
 
@@ -61,10 +66,10 @@ func (d *Display) Update() error {
 
 func (d *Display) Draw(screen *ebiten.Image) {
 	if d.mapProjection == nil {
-		d.mapProjection = _map.DrawMap(d.geoJsonData, ebiten.NewImage(d.ScreenWidth, d.ScreenHeight))
+		d.mapProjection = pkgmap.DrawMap(d.geoJsonData, ebiten.NewImage(d.ScreenWidth, d.ScreenHeight))
 	}
 
-	d.screenBuffer.Fill(_map.OceanColor)
+	d.screenBuffer.Fill(pkgmap.OceanColor)
 	d.screenBuffer.DrawImage(d.mapProjection, nil)
 
 	d.simulation.DrawLocations(d.screenBuffer, d.baseCircleImage)

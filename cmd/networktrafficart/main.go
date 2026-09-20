@@ -12,7 +12,7 @@ import (
 	"networktrafficart/internal/csv"
 	"networktrafficart/internal/display"
 	"networktrafficart/internal/geo"
-	_map "networktrafficart/internal/map"
+	pkgmap "networktrafficart/internal/map"
 	"networktrafficart/internal/simulation"
 	"runtime"
 )
@@ -63,7 +63,7 @@ func main() {
 		go mockdatastream.Start(capt.Data, conf.MockEventStreamDelayMicros, conf.MockEventBatchSize)
 	}
 
-	geoData := _map.LoadGeoJSON("assets/map/map.geojson")
+	geoData := pkgmap.LoadGeoJSON("assets/map/map.geojson")
 	geoService := geo.NewGeoService("assets/geolitedb/GeoLite2-City.mmdb")
 	sim := simulation.NewSimulation(capt.Data, geoData.Bounds, geoService)
 	disp := display.NewDisplay(sim, geoData, geoService, cancel)
