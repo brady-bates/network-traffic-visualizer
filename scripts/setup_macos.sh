@@ -45,7 +45,7 @@ fi
 
 go mod download
 go build -o bin/capture ./cmd/capture
-go build -o bin/networktrafficart ./cmd/networktrafficart
+go build -o bin/networktrafficvisualizer ./cmd/networktrafficvisualizer
 
 if [[ "$GRANT_CAPTURE" == true ]]; then
   sudo chown "$USER":staff /dev/bpf*
@@ -61,4 +61,4 @@ fi
 echo
 echo "Setup complete."
 echo "Test capture: ./bin/capture --count 10"
-echo "Run display: ./bin/networktrafficart"
+echo "Run display: ./bin/networktrafficvisualizer"

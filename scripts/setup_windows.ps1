@@ -43,7 +43,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 go build -o "bin\capture.exe" .\cmd\capture
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-go build -o "bin\networktrafficart.exe" .\cmd\networktrafficart
+go build -o "bin\networktrafficvisualizer.exe" .\cmd\networktrafficvisualizer
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $NpcapParameters = Get-ItemProperty `
@@ -61,4 +61,4 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ""
 Write-Host "Setup complete."
 Write-Host "Test capture: .\bin\capture.exe --count 10"
-Write-Host "Run display: .\bin\networktrafficart.exe"
+Write-Host "Run display: .\bin\networktrafficvisualizer.exe"

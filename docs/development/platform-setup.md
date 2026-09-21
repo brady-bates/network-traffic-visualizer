@@ -5,7 +5,7 @@ native packet-capture runtime and permissions. The setup scripts build two
 executables:
 
 - `capture`: live capture and transformed NDJSON output without a UI.
-- `networktrafficart`: live capture with the Ebiten display.
+- `networktrafficvisualizer`: live capture with the Ebiten display.
 
 Run executables from the repository root so `.env` and the external assets are
 available.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"networktrafficart/internal/capture"
+	"networktrafficvisualizer/internal/capture"
 	"time"
 )
 

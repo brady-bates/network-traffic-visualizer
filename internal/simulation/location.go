@@ -4,8 +4,8 @@ import (
 	"github.com/paulmach/orb"
 	"log"
 	"net"
-	"networktrafficart/internal/geo"
-	pkgmap "networktrafficart/internal/map"
+	"networktrafficvisualizer/internal/geo"
+	pkgmap "networktrafficvisualizer/internal/map"
 )
 
 type Location struct {

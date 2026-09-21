@@ -3,7 +3,7 @@ package mockdatastream
 import (
 	"math/rand"
 	"net"
-	"networktrafficart/internal/capture"
+	"networktrafficvisualizer/internal/capture"
 	"time"
 )
 

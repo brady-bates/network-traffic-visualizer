@@ -6,14 +6,14 @@ import (
 	"github.com/google/gopacket"
 	"github.com/hajimehoshi/ebiten/v2"
 	"log"
-	"networktrafficart/internal/capture"
-	"networktrafficart/internal/capture/mockdatastream"
-	"networktrafficart/internal/config"
-	"networktrafficart/internal/csv"
-	"networktrafficart/internal/display"
-	"networktrafficart/internal/geo"
-	pkgmap "networktrafficart/internal/map"
-	"networktrafficart/internal/simulation"
+	"networktrafficvisualizer/internal/capture"
+	"networktrafficvisualizer/internal/capture/mockdatastream"
+	"networktrafficvisualizer/internal/config"
+	"networktrafficvisualizer/internal/csv"
+	"networktrafficvisualizer/internal/display"
+	"networktrafficvisualizer/internal/geo"
+	pkgmap "networktrafficvisualizer/internal/map"
+	"networktrafficvisualizer/internal/simulation"
 	"runtime"
 )
 
@@ -25,7 +25,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := config.LoadConfig(); err != nil {
+	if _, err := config.LoadConfig(); err != nil {
 		log.Fatal(err)
 	}
 	conf := config.GetConfig()

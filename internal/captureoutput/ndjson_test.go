@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net"
-	"networktrafficart/internal/capture"
+	"networktrafficvisualizer/internal/capture"
 	"strings"
 	"testing"
 	"time"

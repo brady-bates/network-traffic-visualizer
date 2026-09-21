@@ -14,7 +14,7 @@ modules, and build the capture and display executables under `bin/`.
 ```sh
 ./scripts/setup_macos.sh --grant-capture
 ./bin/capture --count 10
-./bin/networktrafficart
+./bin/networktrafficvisualizer
 ```
 
 `--grant-capture` applies owner-only BPF permissions until the next reboot. For
@@ -25,7 +25,7 @@ permanent access, install Wireshark's ChmodBPF package.
 ```sh
 ./scripts/setup_linux.sh --install-deps --grant-capture
 ./bin/capture --count 10
-./bin/networktrafficart
+./bin/networktrafficvisualizer
 ```
 
 The setup script supports Debian/Ubuntu, Fedora, and Arch package managers.
@@ -43,7 +43,7 @@ Then run:
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\setup_windows.ps1
 .\bin\capture.exe --count 10
-.\bin\networktrafficart.exe
+.\bin\networktrafficvisualizer.exe
 ```
 
 The Windows build is pure Go. It does not require GCC, CGO, or the Npcap SDK;

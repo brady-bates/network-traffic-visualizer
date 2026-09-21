@@ -79,14 +79,14 @@ fi
 
 go mod download
 go build -o bin/capture ./cmd/capture
-go build -o bin/networktrafficart ./cmd/networktrafficart
+go build -o bin/networktrafficvisualizer ./cmd/networktrafficvisualizer
 
 if [[ "$GRANT_CAPTURE" == true ]]; then
   if ! command -v setcap >/dev/null 2>&1; then
     echo "setcap is required. Install libcap2-bin or your distribution's libcap package." >&2
     exit 1
   fi
-  sudo setcap cap_net_raw,cap_net_admin=eip bin/capture bin/networktrafficart
+  sudo setcap cap_net_raw,cap_net_admin=eip bin/capture bin/networktrafficvisualizer
   echo "Granted packet-capture capabilities to the built binaries."
 else
   echo
@@ -97,4 +97,4 @@ fi
 echo
 echo "Setup complete."
 echo "Test capture: ./bin/capture --count 10"
-echo "Run display from a graphical session: ./bin/networktrafficart"
+echo "Run display from a graphical session: ./bin/networktrafficvisualizer"

@@ -5,9 +5,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"
-	"networktrafficart/internal/geo"
-	pkgmap "networktrafficart/internal/map"
-	"networktrafficart/internal/simulation"
+	"networktrafficvisualizer/internal/geo"
+	pkgmap "networktrafficvisualizer/internal/map"
+	"networktrafficvisualizer/internal/simulation"
 )
 
 const (

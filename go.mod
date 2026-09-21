@@ -1,4 +1,4 @@
-module networktrafficart
+module networktrafficvisualizer
 
 go 1.24.12
 

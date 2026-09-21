@@ -1,12 +1,13 @@
 package config
 
 import (
-	"errors"
 	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 	"strings"
 )
+
+var config *Config
 
 type Config struct {
 	Fullscreen                          bool
@@ -63,7 +64,7 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	cfg := &Config{
+	config = &Config{
 		Fullscreen:                          isTrueStr(os.Getenv("FULLSCREEN")),
 		EnableMockEventStream:               isTrueStr(os.Getenv("ENABLE_MOCK_EVENT_STREAM")),
 		MockEventStreamDelayMicros:          mockDelay,
@@ -76,7 +77,7 @@ func LoadConfig() (*Config, error) {
 		PacketCaptureFilter:                 strings.TrimSpace(os.Getenv("PACKET_CAPTURE_FILTER")),
 		PacketBufferConsumerAggressionCurve: curve,
 	}
-	return err
+	return config, nil
 }
 
 func GetConfig() *Config {
