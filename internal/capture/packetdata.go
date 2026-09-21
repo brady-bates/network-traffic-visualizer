@@ -8,21 +8,21 @@ import (
 	"net"
 )
 
-type PacketData struct {
+type Packet struct {
 	SrcIP      net.IP
 	DstIP      net.IP
 	IsIncoming bool
 }
 
-func NewPacketData(srcIP, dstIP net.IP) PacketData {
-	return PacketData{
+func NewPacket(srcIP, dstIP net.IP) Packet {
+	return Packet{
 		SrcIP:      srcIP,
 		DstIP:      dstIP,
 		IsIncoming: rand.Intn(2) == 1,
 	}
 }
 
-func NewDataFromPacket(packet gopacket.Packet, subnet *net.IPNet) PacketData {
+func NewPacketFromGopacket(packet gopacket.Packet, subnet *net.IPNet) Packet {
 	var srcIP, dstIP net.IP
 
 	// TODO improve handling of IPv6 rather than "normalizing" to IPv4
@@ -37,7 +37,7 @@ func NewDataFromPacket(packet gopacket.Packet, subnet *net.IPNet) PacketData {
 		fmt.Printf("Unknown layer type %s - check if layer type is valid before calling\n", packet.NetworkLayer().LayerType().String())
 	}
 
-	return PacketData{
+	return Packet{
 		srcIP,
 		dstIP,
 		subnet.Contains(dstIP),

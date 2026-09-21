@@ -11,7 +11,7 @@ import (
 
 type Capture struct {
 	Handle      *pcap.Handle
-	Data        chan PacketData
+	Packets     chan Packet
 	localSubnet *net.IPNet
 }
 
@@ -25,7 +25,7 @@ type Device struct {
 func NewCaptureProvider(handle *pcap.Handle, subnet *net.IPNet) *Capture {
 	return &Capture{
 		Handle:      handle,
-		Data:        make(chan PacketData, 50000),
+		Packets:     make(chan Packet, 50000),
 		localSubnet: subnet,
 	}
 }
@@ -43,7 +43,7 @@ func (c *Capture) StartPacketCapture(packetIn chan<- gopacket.Packet) {
 
 		if IsValidLayerType(packet.NetworkLayer()) {
 			select {
-			case c.Data <- NewDataFromPacket(packet, c.localSubnet):
+			case c.Packets <- NewPacketFromGopacket(packet, c.localSubnet):
 			default:
 				log.Println("Dropped packet (channel full)")
 			}

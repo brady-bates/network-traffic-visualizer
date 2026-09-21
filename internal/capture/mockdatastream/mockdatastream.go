@@ -16,12 +16,12 @@ func generateRandomIPv4() net.IP {
 	return net.IPv4(o1, o2, o3, o4).To4()
 }
 
-func Start(events chan capture.PacketData, delayMicros int, batchSize int) {
+func Start(events chan capture.Packet, delayMicros int, batchSize int) {
 	micro := time.Duration(delayMicros) * time.Microsecond
 	for {
 		for range batchSize {
 			select {
-			case events <- capture.NewPacketData(generateRandomIPv4(), generateRandomIPv4()):
+			case events <- capture.NewPacket(generateRandomIPv4(), generateRandomIPv4()):
 			default:
 			}
 		}

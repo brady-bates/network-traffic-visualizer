@@ -18,7 +18,7 @@ type PacketEvent struct {
 	Direction          string    `json:"direction"`
 }
 
-func NewPacketEvent(data capture.PacketData, observedAt time.Time) PacketEvent {
+func NewPacketEvent(data capture.Packet, observedAt time.Time) PacketEvent {
 	direction := "outbound"
 	if data.IsIncoming {
 		direction = "inbound"
@@ -33,7 +33,7 @@ func NewPacketEvent(data capture.PacketData, observedAt time.Time) PacketEvent {
 	}
 }
 
-func StreamNDJSON(ctx context.Context, output io.Writer, packets <-chan capture.PacketData, limit int) error {
+func StreamNDJSON(ctx context.Context, output io.Writer, packets <-chan capture.Packet, limit int) error {
 	encoder := json.NewEncoder(output)
 	written := 0
 

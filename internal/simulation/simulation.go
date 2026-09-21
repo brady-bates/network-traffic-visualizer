@@ -12,7 +12,7 @@ import (
 )
 
 type Simulation struct {
-	CaptureData       chan capture.PacketData
+	CapturePackets    chan capture.Packet
 	Locations         []*Location
 	mut               sync.RWMutex
 	OffScreenDistance float32
@@ -21,9 +21,9 @@ type Simulation struct {
 	MapBounds         orb.Bound
 }
 
-func NewSimulation(cd chan capture.PacketData, bounds orb.Bound, geo geo.GeoService) *Simulation {
+func NewSimulation(cd chan capture.Packet, bounds orb.Bound, geo geo.GeoService) *Simulation {
 	return &Simulation{
-		CaptureData:       cd,
+		CapturePackets:    cd,
 		Locations:         []*Location{},
 		mut:               sync.RWMutex{},
 		OffScreenDistance: 25,
@@ -72,10 +72,10 @@ func (s *Simulation) AddToLocations(l *Location) {
 }
 
 func (s *Simulation) WatchEventChannel() {
-	for data := range s.CaptureData {
+	for packet := range s.CapturePackets {
 		locs := []Location{
-			NewLocation(data.SrcIP, s.GeoService, s.MapBounds),
-			NewLocation(data.DstIP, s.GeoService, s.MapBounds),
+			NewLocation(packet.SrcIP, s.GeoService, s.MapBounds),
+			NewLocation(packet.DstIP, s.GeoService, s.MapBounds),
 		}
 
 		for _, loc := range locs {

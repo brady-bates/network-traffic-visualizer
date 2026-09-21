@@ -60,12 +60,12 @@ func main() {
 	go capt.StartPacketCapture(csvWriterIn)
 
 	if conf.EnableMockEventStream {
-		go mockdatastream.Start(capt.Data, conf.MockEventStreamDelayMicros, conf.MockEventBatchSize)
+		go mockdatastream.Start(capt.Packets, conf.MockEventStreamDelayMicros, conf.MockEventBatchSize)
 	}
 
 	geoData := pkgmap.LoadGeoJSON("assets/map/map.geojson")
 	geoService := geo.NewGeoService("assets/geolitedb/GeoLite2-City.mmdb")
-	sim := simulation.NewSimulation(capt.Data, geoData.Bounds, geoService)
+	sim := simulation.NewSimulation(capt.Packets, geoData.Bounds, geoService)
 	disp := display.NewDisplay(sim, geoData, geoService, cancel)
 
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)

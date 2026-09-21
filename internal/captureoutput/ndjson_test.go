@@ -13,7 +13,7 @@ import (
 
 func TestNewPacketEvent(t *testing.T) {
 	observedAt := time.Date(2026, time.September, 20, 5, 0, 0, 0, time.FixedZone("test", -5*60*60))
-	event := NewPacketEvent(capture.PacketData{
+	event := NewPacketEvent(capture.Packet{
 		SrcIP:      net.ParseIP("192.0.2.1"),
 		DstIP:      net.ParseIP("198.51.100.2"),
 		IsIncoming: true,
@@ -37,9 +37,9 @@ func TestNewPacketEvent(t *testing.T) {
 }
 
 func TestStreamNDJSONStopsAtLimit(t *testing.T) {
-	packets := make(chan capture.PacketData, 3)
+	packets := make(chan capture.Packet, 3)
 	for i := 0; i < 3; i++ {
-		packets <- capture.PacketData{
+		packets <- capture.Packet{
 			SrcIP: net.IPv4(192, 0, 2, byte(i+1)),
 			DstIP: net.IPv4(198, 51, 100, 1),
 		}

@@ -69,7 +69,7 @@ func run(ctx context.Context, output, diagnostics io.Writer, opts options) error
 
 	fmt.Fprintf(diagnostics, "capturing on %s with IPv4 subnet %s; streaming packet metadata as NDJSON\n", device.DisplayName(), device.Subnet)
 	go provider.StartPacketCapture(nil)
-	return captureoutput.StreamNDJSON(ctx, output, provider.Data, opts.count)
+	return captureoutput.StreamNDJSON(ctx, output, provider.Packets, opts.count)
 }
 
 func listInterfaces(output io.Writer) error {
