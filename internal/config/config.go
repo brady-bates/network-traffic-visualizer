@@ -1,14 +1,11 @@
 package config
 
 import (
+	"errors"
 	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 	"strings"
-)
-
-var (
-	config *Config
 )
 
 type Config struct {
@@ -43,30 +40,30 @@ func parseToFloat(s string) (float64, error) {
 	return strconv.ParseFloat(s, 64)
 }
 
-func LoadConfig() error {
-	err := godotenv.Load()
+func LoadConfig() (*Config, error) {
+	_ = godotenv.Load() // Ignore error if .env file is missing
 
-	mockDelay, errInt1 := parseToInt(os.Getenv("MOCK_EVENT_STREAM_DELAY_MICROS"))
-	if errInt1 != nil {
-		return errInt1
+	mockDelay, err := parseToInt(os.Getenv("MOCK_EVENT_STREAM_DELAY_MICROS"))
+	if err != nil {
+		return nil, err
 	}
 
-	batchSize, errInt2 := parseToInt(os.Getenv("MOCK_EVENT_BATCH_SIZE"))
-	if errInt2 != nil {
-		return errInt2
+	batchSize, err := parseToInt(os.Getenv("MOCK_EVENT_BATCH_SIZE"))
+	if err != nil {
+		return nil, err
 	}
 
-	maxDelay, errInt3 := parseToInt(os.Getenv("PACKET_BUFFER_CONSUMER_MAX_DELAY_MICROS"))
-	if errInt3 != nil {
-		return errInt3
+	maxDelay, err := parseToInt(os.Getenv("PACKET_BUFFER_CONSUMER_MAX_DELAY_MICROS"))
+	if err != nil {
+		return nil, err
 	}
 
-	curve, errFloat := parseToFloat(os.Getenv("PACKET_BUFFER_CONSUMER_AGGRESSION_CURVE"))
-	if errFloat != nil {
-		return errFloat
+	curve, err := parseToFloat(os.Getenv("PACKET_BUFFER_CONSUMER_AGGRESSION_CURVE"))
+	if err != nil {
+		return nil, err
 	}
 
-	config = &Config{
+	cfg := &Config{
 		Fullscreen:                          isTrueStr(os.Getenv("FULLSCREEN")),
 		EnableMockEventStream:               isTrueStr(os.Getenv("ENABLE_MOCK_EVENT_STREAM")),
 		MockEventStreamDelayMicros:          mockDelay,
