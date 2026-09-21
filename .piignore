@@ -1,0 +1,14 @@
+# Pi Ignore
+# Inherits standard patterns and adds heavy build/data exclusions
+
+# Include/reference gitignore patterns automatically or define explicitly:
+/bin/
+/duckdb/
+*.db
+*.csv
+.env
+assets/map/map.geojson
+assets/geolitedb/GeoLite2-City.mmdb
+*.puml
+node_modules/
+dist/
